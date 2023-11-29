@@ -52,6 +52,7 @@ def calculate_logan_vt(frame_time_filename, reference_filename, target_filename,
     plt.title(f'Logan Vt: target-{reference_name}, reference-plasma, tstar: {tstar} minutes')
     plt.ylabel('Y')
     plt.xlabel('X')
+    plt.axis('equal')  # Set equal scaling for both axes
     plt.grid(True)
     plt.savefig(output_filename, format='png')
     plt.close()
