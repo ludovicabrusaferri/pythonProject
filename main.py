@@ -66,50 +66,6 @@ def calculate_logan_vt(frame_time_filename, reference_filename, target_filename,
         os.rename(f'{output_filename}.txt', os.path.join(output_directory, f'{output_filename}.txt'))
 
 
-def shorten_plasma(frame_time_filename, plasma_full, subject_id, home_directory):
-    # Load SUV data
-    suv_filename = os.path.join(home_directory, 'SUV-info_for_plasma.xls')
-    suv_data = np.genfromtxt(suv_filename, delimiter='\t', skip_header=1)
-
-    # Extract subject list and find index for the given subject_id
-    subject_list = suv_data[:, 0].astype(str)
-    subjects = subject_list[~np.isnan(subject_list)]
-    subject_index = np.where(subjects == subject_id)[0][0]
-
-    # Extract SUV value for the subject
-    subject_suv = suv_data[subject_index - 1, 3]  # Subtract one because column headers are included
-
-    # Load time and plasma data
-    time_data = np.loadtxt(frame_time_filename)
-    plasma_metabolite_data = np.loadtxt(plasma_full)
-    plasma_shortened = np.zeros_like(time_data[:, 0])
-
-    plasma_time = plasma_metabolite_data[:, 0]
-    tstart = time_data[0, 0] + 1
-    pstart = tstart + 1
-
-    for m in range(len(time_data[:, 0])):
-        tend = time_data[m, 1]
-
-        if tend >= plasma_time[-1]:
-            tend = plasma_time[-1] - 1
-
-        for x in range(len(plasma_metabolite_data[:, 0])):
-            if plasma_metabolite_data[x, 0] == tend:
-                pend = plasma_metabolite_data[x, 0] + 1
-
-        plasma_shortened[m, 0] = np.mean(plasma_metabolite_data[pstart:pend, 1])
-
-        pstart = pend + 1
-
-    suv_plasma = plasma_shortened / subject_suv
-    shortened_plasma = suv_plasma
-
-    # Check for NaN in shortened_plasma
-    if np.isnan(shortened_plasma):
-        raise ValueError('There are not enough blood samples - it is likely that they do not cover the whole scan time!')
-
-
 # Main Script
 script_directory = '/Users/luto/Dropbox/AIProject/ScriptsAI/PETkinetic'
 os.chdir(script_directory)
