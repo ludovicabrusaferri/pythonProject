@@ -89,17 +89,21 @@ home_directory = home_directory.replace('/ScriptsAI/PETkinetic', '')
 tac_directory = '/Users/luto/Dropbox/AIProject/DATA/TAC'
 output_directory = '/Users/luto/Dropbox/AIProject/OUT/'
 
-if not os.path.exists(output_directory):
-    os.makedirs(output_directory)
-
 os.chdir(home_directory)
 
 
 if filename_option == 'TRUEPLASMA':
     path_to_use = os.path.join(home_directory, 'DATA/metabolite_corrected_signal_data')
+    output_directory = os.path.join(output_directory, 'TRUEPLASMA')
+elif filename_option == 'SIGNALDATA':
+    path_to_use = os.path.join(home_directory, 'DATA/signal_data')
+    output_directory = os.path.join(output_directory, 'SIGNALDATA')
 else:
     print("Invalid filename_option. Exiting.")
     sys.exit()
+
+if not os.path.exists(output_directory):
+    os.makedirs(output_directory)
 
 for i in range(len(subject_ids)):
     print(f'============ SUBJ {subjects[i]} and i: {i} \n\n =======\n')
