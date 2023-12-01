@@ -76,12 +76,12 @@ script_directory = '/Users/luto/Dropbox/AIProject/ScriptsAI/PETkinetic'
 os.chdir(script_directory)
 
 start_value = 0
-N = 2
+N = 3
 subject_ids = list(range(start_value, N))
 print(subject_ids)
 subjects = [str(i) for i in subject_ids]
 tstar = 15
-filename_option = 'TRUEPLASMA'
+filename_option = 'SIGNALDATA'
 
 home_directory = os.path.abspath(script_directory)
 home_directory = home_directory.replace('/ScriptsAI/PETkinetic', '')
