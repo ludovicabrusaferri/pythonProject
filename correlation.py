@@ -4,18 +4,49 @@ import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 from sklearn.linear_model import LinearRegression
 
-def compute_correlation(trueplasma_directory, signaldata_directory):
+def plot_correlation(array1, array2, x_label, y_label, title):
+    # Extract necessary information from arrays
+    x_values = array1  # Assuming the first entry in vt_values is the relevant one
+    y_values = array2
+
+    # Compute correlation
+    correlation, _ = pearsonr(x_values, y_values)
+
+    # Plotting with regression line
+    plt.figure()
+    plt.plot(x_values, y_values, 'o', label='Data Points')
+
+    # Fit a linear regression model
+    model = LinearRegression()
+    x_values = x_values.reshape(-1, 1)
+    model.fit(x_values, y_values)
+
+    # Plot the regression line
+    plt.plot(x_values, model.predict(x_values), color='red', linewidth=2,
+             label='Regression Line')
+
+    plt.title(f'{title}\nCorrelation: {correlation.item():.2f}')
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.legend()
+    plt.show()
+
+def compute_mean_vt_over_ROIs(trueplasma_directory, signaldata_directory):
     trueplasma_files = [file for file in os.listdir(trueplasma_directory) if file.endswith('_TRUEPLASMA.txt')]
     signaldata_files = [file for file in os.listdir(signaldata_directory) if file.endswith('_SIGNALDATA.txt')]
 
     correlations = []
 
-    # Store Vt values for each subject and ROI
-    all_trueplasma_vt_values = []
-    all_signaldata_vt_values = []
+    # Define a structured array for trueplasma data
+    dt_trueplasma = np.dtype([('subject_id', int), ('roi', 'U10'), ('vt_values', object)])
+    trueplasma_array = np.array([], dtype=dt_trueplasma)
+
+    # Define a structured array for signaldata data
+    dt_signaldata = np.dtype([('subject_id', int), ('roi', 'U10'), ('vt_values', object)])
+    signaldata_array = np.array([], dtype=dt_signaldata)
 
     for trueplasma_file in trueplasma_files:
-        subject_id = trueplasma_file.split('_')[0]
+        subject_id = int(trueplasma_file.split('_')[0])
         roi = trueplasma_file.split('_')[1]
 
         # Find corresponding SIGNALDATA file
@@ -34,10 +65,39 @@ def compute_correlation(trueplasma_directory, signaldata_directory):
             trueplasma_vt_all = np.loadtxt(trueplasma_path)
             signaldata_vt_all = np.loadtxt(signaldata_path)
 
-            # Append Vt values for the current ROI
-            all_trueplasma_vt_values.append(trueplasma_vt_all)
-            all_signaldata_vt_values.append(signaldata_vt_all)
-    print(all_trueplasma_vt_values)
+            # Append data to the trueplasma array
+            entry_trueplasma = np.array([(subject_id, roi, trueplasma_vt_all)], dtype=dt_trueplasma)
+            trueplasma_array = np.concatenate((trueplasma_array, entry_trueplasma))
+
+            # Append data to the signaldata array
+            entry_signaldata = np.array([(subject_id, roi, signaldata_vt_all)], dtype=dt_signaldata)
+            signaldata_array = np.concatenate((signaldata_array, entry_signaldata))
+
+    # Calculate average Vt values over ROIs for trueplasma
+    unique_subjects = np.unique(trueplasma_array['subject_id'])
+
+    trueplasma_avg_array = np.array([], dtype=dt_trueplasma)
+    signaldata_avg_array = np.array([], dtype=dt_signaldata)
+
+    for subject_id in unique_subjects:
+        subject_entries = trueplasma_array[trueplasma_array['subject_id'] == subject_id]
+        avg_vt_values = np.mean(np.vstack(subject_entries['vt_values']), axis=0)
+        entry_avg_trueplasma = np.array([(subject_id, 'avg', avg_vt_values)], dtype=dt_trueplasma)
+        trueplasma_avg_array = np.concatenate((trueplasma_avg_array, entry_avg_trueplasma))
+
+        subject_entries = signaldata_array[signaldata_array['subject_id'] == subject_id]
+        avg_vt_values = np.mean(np.vstack(subject_entries['vt_values']), axis=0)
+        entry_avg_signaldata = np.array([(subject_id, 'avg', avg_vt_values)], dtype=dt_signaldata)
+        signaldata_avg_array = np.concatenate((signaldata_avg_array, entry_avg_signaldata))
+
+    # Access data in a structured way, e.g., trueplasma_avg_array['subject_id'], trueplasma_avg_array['vt_values'], etc.
+    print("Trueplasma Averaged Data:")
+    print(trueplasma_avg_array)
+
+    print("\nSignaldata Averaged Data:")
+    print(signaldata_avg_array)
+
+    return trueplasma_avg_array['vt_values'], signaldata_avg_array['vt_values']
 
 
 # Specify the directories for TRUEPLASMA and SIGNALDATA outputs
@@ -45,6 +105,6 @@ trueplasma_output_directory = '/Users/luto/Dropbox/AIProject/OUT/TRUEPLASMA/'
 signaldata_output_directory = '/Users/luto/Dropbox/AIProject/OUT/SIGNALDATA/'
 
 # Call the function to compute and print the correlation with plotting
-average_trueplasma_vt_values = compute_correlation(trueplasma_output_directory, signaldata_output_directory)
+trueplasma, signaldata =compute_mean_vt_over_ROIs(trueplasma_output_directory, signaldata_output_directory)
 
-# Now you can use average_trueplasma_vt_values for further analysis or plotting
+plot_correlation(trueplasma, signaldata, 'TRUEPLASMA Vt', 'SIGNALDATA Vt', 'Correlation between TRUEPLASMA and SIGNALDATA')
