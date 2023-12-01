@@ -1,4 +1,5 @@
 import os
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import cumtrapz
@@ -74,11 +75,12 @@ def calculate_logan_vt(frame_time_filename, reference_filename, target_filename,
 script_directory = '/Users/luto/Dropbox/AIProject/ScriptsAI/PETkinetic'
 os.chdir(script_directory)
 
-start = 0
-N = 51
-subject_ids = [0]
+start_value = 0
+N = 2
+subject_ids = list(range(start_value, N))
+print(subject_ids)
 subjects = [str(i) for i in subject_ids]
-
+tstar = 15
 filename_option = 'TRUEPLASMA'
 
 home_directory = os.path.abspath(script_directory)
@@ -92,17 +94,18 @@ if not os.path.exists(output_directory):
 
 os.chdir(home_directory)
 
-tstar = 15
 
-TRUEPLASMA_path = os.path.join(home_directory, 'DATA/metabolite_corrected_signal_data')
-
-filename_to_use = TRUEPLASMA_path
+if filename_option == 'TRUEPLASMA':
+    path_to_use = os.path.join(home_directory, 'DATA/metabolite_corrected_signal_data')
+else:
+    print("Invalid filename_option. Exiting.")
+    sys.exit()
 
 for i in range(len(subject_ids)):
     print(f'============ SUBJ {subjects[i]} and i: {i} \n\n =======\n')
-    if os.path.exists(os.path.join(filename_to_use, f'{subjects[i]}.txt')):
+    if os.path.exists(os.path.join(path_to_use, f'{subjects[i]}.txt')):
         frame_time_filename = os.path.join(home_directory, 'DATA/Analyses/', 'timeframes_start_stop.txt')
-        plasma_Lin_filename = os.path.join(filename_to_use, f'{subjects[i]}.txt')
+        plasma_Lin_filename = os.path.join(path_to_use, f'{subjects[i]}.txt')
 
         os.chdir(tac_directory)
         tacs = [tac for tac in os.listdir('.') if tac.startswith(f'{subjects[i]}') and tac.endswith('_SUV-TAC.txt')]
